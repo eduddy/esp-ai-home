@@ -1,0 +1,90 @@
+esphome:
+  name: servo-waver
+  friendly_name: "Servo Waver"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable Home Assistant API
+api:
+
+logger:
+
+output:
+  - platform: ledc
+    id: servo_pwm
+    # UPDATE THIS PIN: The GPIO pin connected to the servo signal wire
+    pin: GPIO18
+    frequency: 50Hz
+
+servo:
+  - id: my_servo
+    output: servo_pwm
+    # MG90S typically works well with 500us to 2400us pulses.
+    # At 50Hz (20ms period), 500us is 2.5% and 2400us is 12%.
+    # You may need to tune these slightly for your specific motor to get full 0-180 range without buzzing.
+    min_level: 2.5%
+    max_level: 12.0%
+
+    # Optional: Initial state when device boots.
+    # auto_detach_time: 1s # Good for saving power if servo holds position well
+    # transition_length: 0.5s # Default smoothing
+
+script:
+  - id: wave_hand_script
+    mode: restart
+    then:
+      # 1. Calibration / Center
+      # Move to center (90 degrees).
+      # In ESPHome servo level: -1.0 is 0deg, 0.0 is 90deg, 1.0 is 180deg.
+      - logger.log: "Phase 1: Calibrating to Center (90 degrees)"
+      - servo.write:
+          id: my_servo
+          level: 0.0
+      - delay: 1s
+
+      # 2. Raise to "Wave" position (Near upper range, e.g., 170 degrees)
+      # 170 degrees is approx 0.88 on the -1.0 to 1.0 scale.
+      - logger.log: "Phase 2: Raising arm"
+      - servo.write:
+          id: my_servo
+          level: 0.88
+          transition_length: 1s
+      - delay: 1s
+
+      # 3. Wave Action (3 times)
+      - logger.log: "Phase 3: Waving"
+      - repeat:
+          count: 3
+          then:
+            # Move Left/Down slightly (e.g., 140 degrees -> level 0.55)
+            - servo.write:
+                id: my_servo
+                level: 0.55
+                transition_length: 300ms
+            - delay: 350ms
+
+            # Move Right/Up (e.g., 170 degrees -> level 0.88)
+            - servo.write:
+                id: my_servo
+                level: 0.88
+                transition_length: 300ms
+            - delay: 350ms
+
+      # 4. Stow (Return to 0 degrees)
+      - logger.log: "Phase 4: Stowing arm"
+      - servo.write:
+          id: my_servo
+          level: -1.0
+          transition_length: 2s
+      - delay: 2s
+
+# Button to trigger the script from Home Assistant
+button:
+  - platform: template
+    name: "Wave Hand"
+    icon: "mdi:hand-wave"
+    on_press:
+      - script.execute: wave_hand_script
