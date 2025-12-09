@@ -1791,7 +1791,7 @@ display:
               // Normal layout: time shown, date below it
               const int date_pad     = std::max(10, H / 20);
               const int extra_offset = std::max(6, H / 32);
-              int date_y = top + DH + date_pad + extra_offset;
+              int date_y = clock_top + digit_height + date_pad + extra_offset;
               if (id(clock_24h).state) {
                 it.strftime(cx, date_y, id(font_big_date), FG, TextAlign::CENTER, "%a, %d %b", now);
               } else {
