@@ -1377,8 +1377,12 @@ globals:
   - id: touch_start_x
     type: int
     restore_value: no
-    initial_value: "0"
+    initial_value: "-1"
   - id: touch_start_time
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: last_touch_x
     type: int
     restore_value: no
     initial_value: "0"
@@ -1481,16 +1485,19 @@ touchscreen:
     i2c_id: touchscreen_bus
     on_touch:
       - lambda: |-
-          if (touch.x > 0) id(touch_start_x) = touch.x;
-          id(touch_start_time) = millis();
+          if (id(touch_start_x) < 0) {
+            id(touch_start_x) = touch.x;
+            id(touch_start_time) = millis();
+          }
+          id(last_touch_x) = touch.x;
     on_release:
       - lambda: |-
-          int delta = abs(id(touch_start_x) - touch.x);
+          int delta = abs(id(touch_start_x) - id(last_touch_x));
           int duration = millis() - id(touch_start_time);
 
           if (delta > 50) {
              // Swipe
-             if (touch.x > id(touch_start_x)) {
+             if (id(last_touch_x) > id(touch_start_x)) {
                 // Swipe Right (Prev)
                 id(current_page) = 0;
              } else {
@@ -1509,6 +1516,8 @@ touchscreen:
                  id(handle_screen_tap).execute();
              }
           }
+          // Reset
+          id(touch_start_x) = -1;
 
 display:
   - platform: ${display_platform}
@@ -1540,28 +1549,28 @@ display:
           // --- TOP: Persons ---
           int top_y = 60;
           // Person 1 (Ed)
-          Color ed_col = (id(person_edward).state == "home") ? Color::GREEN : Color::GREY;
+          Color ed_col = (id(person_edward).state == "home") ? Color(0, 255, 0) : Color(128, 128, 128);
           it.printf(cx - 60, top_y, id(icon_font), ed_col, TextAlign::CENTER, "\ue7fd");
           it.printf(cx - 60, top_y + 35, id(font_request_response), Color::WHITE, TextAlign::CENTER, "Ed");
 
           // Person 2 (Meg)
-          Color meg_col = (id(person_meg).state == "home") ? Color::GREEN : Color::GREY;
+          Color meg_col = (id(person_meg).state == "home") ? Color(0, 255, 0) : Color(128, 128, 128);
           it.printf(cx + 60, top_y, id(icon_font), meg_col, TextAlign::CENTER, "\ue7fd");
           it.printf(cx + 60, top_y + 35, id(font_request_response), Color::WHITE, TextAlign::CENTER, "Meg");
 
           // --- CENTER: Temps ---
           int mid_y = cy + 10;
           it.printf(cx, mid_y, id(font_big_clock_mono), Color::WHITE, TextAlign::CENTER, "%.1f°", id(house_temp).state);
-          it.printf(cx, mid_y + 30, id(font_request_response), Color::GREY, TextAlign::CENTER, "Bed: %.1f°", id(bedroom_temp).state);
+          it.printf(cx, mid_y + 30, id(font_request_response), Color(128, 128, 128), TextAlign::CENTER, "Bed: %.1f°", id(bedroom_temp).state);
 
           // --- BOTTOM: Devices ---
           int bot_y = h - 70;
           // TV
-          Color tv_col = (id(tv_status).state == "playing" || id(tv_status).state == "on") ? Color::YELLOW : Color::GREY;
+          Color tv_col = (id(tv_status).state == "playing" || id(tv_status).state == "on") ? Color(255, 255, 0) : Color(128, 128, 128);
           it.printf(cx - 50, bot_y, id(icon_font), tv_col, TextAlign::CENTER, "\ue338");
 
           // Light
-          Color light_col = (id(bedroom_lights).state) ? Color::YELLOW : Color::GREY;
+          Color light_col = (id(bedroom_lights).state) ? Color(255, 255, 0) : Color(128, 128, 128);
           it.printf(cx + 50, bot_y, id(icon_font), light_col, TextAlign::CENTER, "\ue0f0");
 
 
