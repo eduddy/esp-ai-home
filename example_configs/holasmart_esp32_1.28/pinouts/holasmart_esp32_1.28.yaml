@@ -1,0 +1,18 @@
+# Holasmart ESP32 1.28" Round Display - Pinout Definitions
+# Adjust these for your specific unit if different
+# Common for generic ESP32 + GC9A01 4-wire SPI displays
+#
+# Note: GPIO2, 5, 15 are strapping pins - often fixed on PCB.
+# If your unit uses different pins, update below.
+
+substitutions:
+  # Display (1.28" round GC9A01, 4-wire SPI)
+  display_sclk_pin: GPIO18
+  display_mosi_pin: GPIO23
+  display_cs_pin: GPIO5
+  display_dc_pin: GPIO2
+  display_rst_pin: GPIO4
+  display_bl_pin: GPIO15
+
+  # Servo (SG90 "neck")
+  servo_pin: GPIO13

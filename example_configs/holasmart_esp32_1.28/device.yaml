@@ -1,0 +1,81 @@
+# Holasmart ESP32 - 1.28" Round Display + SG90 Servo "Neck"
+# Modular config: pinouts separate from device
+#
+# Usage: esphome run device.yaml
+
+substitutions:
+  name: holasmart-display
+  friendly_name: Holasmart Display
+
+packages:
+  pinouts: !include pinouts/holasmart_esp32_1.28.yaml
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# WiFi and API - customize for your network
+wifi:
+  networks:
+    - ssid: "YourNetwork"
+      password: "YourPassword"
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: "fallback123"
+
+api: {}
+
+ota:
+  - platform: esphome
+
+logger:
+
+# SPI bus for display (4-wire: no MISO)
+spi:
+  - id: display_spi
+    clk_pin: ${display_sclk_pin}
+    mosi_pin: ${display_mosi_pin}
+
+# 1.28" round GC9A01 display (240x240, 4-wire SPI)
+display:
+  - platform: ili9xxx
+    model: GC9A01A
+    cs_pin: ${display_cs_pin}
+    dc_pin: ${display_dc_pin}
+    reset_pin: ${display_rst_pin}
+    spi_id: display_spi
+    invert_colors: true
+    dimensions:
+      width: 240
+      height: 240
+    lambda: |-
+      it.fill(Color::BLACK);
+
+# Backlight (optional - tie to 3.3V if no PWM control)
+output:
+  - platform: ledc
+    id: backlight
+    pin: ${display_bl_pin}
+    frequency: 5000Hz
+  - platform: ledc
+    id: servo_pwm
+    pin: ${servo_pin}
+    frequency: 50Hz
+
+light:
+  - platform: binary
+    name: "Display Backlight"
+    output: backlight
+
+# SG90 servo as "neck" (0°=3%, 90°=7.5%, 180°=12%)
+servo:
+  - id: neck
+    output: servo_pwm
+    min_level: 3%
+    idle_level: 7.5%
+    max_level: 12%
