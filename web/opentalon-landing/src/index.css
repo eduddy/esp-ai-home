@@ -1,0 +1,65 @@
+:root {
+  --bg: #070a10;
+  --panel: rgba(12, 16, 26, 0.72);
+  --panel2: rgba(10, 14, 22, 0.5);
+  --border: rgba(130, 230, 255, 0.22);
+  --text: rgba(217, 240, 255, 0.78);
+  --text-h: rgba(237, 250, 255, 0.96);
+  --muted: rgba(165, 206, 228, 0.55);
+  --accent: #00e5ff;
+  --accent2: #d946ef;
+  --warn: #ffb020;
+  --danger: #ff3b7a;
+
+  --sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+#root {
+  min-height: 100svh;
+  background: radial-gradient(1300px 700px at 30% 10%, rgba(0, 229, 255, 0.12), transparent 60%),
+    radial-gradient(900px 900px at 70% 50%, rgba(217, 70, 239, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(7, 10, 16, 1), rgba(3, 5, 10, 1));
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+p {
+  margin: 0;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  color: var(--text-h);
+}
