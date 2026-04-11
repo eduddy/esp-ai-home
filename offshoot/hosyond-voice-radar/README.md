@@ -14,7 +14,7 @@ This offshoot project provides an end-to-end starting stack for:
   - Display GUI (voice + radar pages)
   - Touchscreen page switching and voice trigger
   - Voice assistant + ES8311 codec + I2S mic/speaker
-  - LD2450 radar sensors and periodic MQTT JSON publishing
+  - Consumes ACEBOTT-published radar JSON over MQTT (no local lidar wiring required)
   - MQTT + Web Server enabled
 - `backend/server.py`
   - Subscribes to raw radar MQTT topic
@@ -31,7 +31,7 @@ This offshoot project provides an end-to-end starting stack for:
 
 ### 1) Firmware
 
-1. Copy and adjust `firmware/hosyond_voice_radar.yaml` substitutions (WiFi, MQTT creds).
+1. Copy and adjust `firmware/hosyond_voice_radar.yaml` substitutions (WiFi, MQTT creds, ACEBOTT radar topic).
 2. Validate:
 
 ```bash
@@ -77,6 +77,7 @@ http://localhost:8081
 
 ## Notes
 
-- Pin assignments are chosen to avoid collisions between I2S and LD2450 UART.
+- This firmware does not directly connect to an LD2450/other lidar module.
+- Radar data is subscribed from the ACEBOTT ESP32 via MQTT (`acebott_radar_topic` substitution).
 - ESPHome warns on strapping pins 45/46; this is expected for current display/backlight wiring.
 - Room and scanned-item APIs are available in backend README.

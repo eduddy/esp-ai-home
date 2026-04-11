@@ -10,6 +10,7 @@ substitutions:
   mqtt_username: "radar"
   mqtt_password: "radar_password"
   mqtt_topic_prefix: "hosyond/voice-radar"
+  acebott_radar_topic: "acebott/radar/raw"
 
 esphome:
   name: ${name}
@@ -61,6 +62,58 @@ mqtt:
   log_topic:
     topic: ${mqtt_topic_prefix}/logs
     level: INFO
+  on_json_message:
+    - topic: ${acebott_radar_topic}
+      then:
+        - lambda: |-
+            id(radar_target_count) = x["target_count"] | 0;
+            JsonArrayConst targets = x["targets"].as<JsonArrayConst>();
+
+            // Reset fields before applying new values.
+            id(radar_t1_x) = NAN;
+            id(radar_t1_y) = NAN;
+            id(radar_t1_speed) = NAN;
+            id(radar_t1_distance) = NAN;
+            id(radar_t2_x) = NAN;
+            id(radar_t2_y) = NAN;
+            id(radar_t2_speed) = NAN;
+            id(radar_t2_distance) = NAN;
+            id(radar_t3_x) = NAN;
+            id(radar_t3_y) = NAN;
+            id(radar_t3_speed) = NAN;
+            id(radar_t3_distance) = NAN;
+
+            int idx = 0;
+            for (JsonObjectConst t : targets) {
+              if (idx == 0) {
+                id(radar_t1_x) = t["x_mm"] | NAN;
+                id(radar_t1_y) = t["y_mm"] | NAN;
+                id(radar_t1_speed) = t["speed_mm_s"] | NAN;
+                id(radar_t1_distance) = t["distance_mm"] | NAN;
+              } else if (idx == 1) {
+                id(radar_t2_x) = t["x_mm"] | NAN;
+                id(radar_t2_y) = t["y_mm"] | NAN;
+                id(radar_t2_speed) = t["speed_mm_s"] | NAN;
+                id(radar_t2_distance) = t["distance_mm"] | NAN;
+              } else if (idx == 2) {
+                id(radar_t3_x) = t["x_mm"] | NAN;
+                id(radar_t3_y) = t["y_mm"] | NAN;
+                id(radar_t3_speed) = t["speed_mm_s"] | NAN;
+                id(radar_t3_distance) = t["distance_mm"] | NAN;
+              } else {
+                break;
+              }
+              idx++;
+            }
+
+            id(radar_still_count) = 0;
+            id(radar_moving_count) = 0;
+            if (!isnan(id(radar_t1_speed)) && fabsf(id(radar_t1_speed)) < 80.0f) id(radar_still_count)++;
+            if (!isnan(id(radar_t2_speed)) && fabsf(id(radar_t2_speed)) < 80.0f) id(radar_still_count)++;
+            if (!isnan(id(radar_t3_speed)) && fabsf(id(radar_t3_speed)) < 80.0f) id(radar_still_count)++;
+            id(radar_moving_count) = id(radar_target_count) - id(radar_still_count);
+
+            id(my_display).update();
   on_connect:
     - mqtt.publish:
         topic: ${mqtt_topic_prefix}/status
@@ -81,68 +134,6 @@ spi:
   clk_pin: 12
   mosi_pin: 11
   miso_pin: 13
-
-uart:
-  id: ld2450_uart
-  tx_pin: 47
-  rx_pin: 21
-  baud_rate: 256000
-
-ld2450:
-  - id: radar
-    uart_id: ld2450_uart
-
-sensor:
-  - platform: ld2450
-    ld2450_id: radar
-    target_count:
-      id: radar_target_count
-      name: "Radar Target Count"
-    still_target_count:
-      id: radar_still_count
-      name: "Radar Still Target Count"
-    moving_target_count:
-      id: radar_moving_count
-      name: "Radar Moving Target Count"
-    target_1:
-      x:
-        id: radar_t1_x
-        name: "Radar Target 1 X"
-      y:
-        id: radar_t1_y
-        name: "Radar Target 1 Y"
-      speed:
-        id: radar_t1_speed
-        name: "Radar Target 1 Speed"
-      distance:
-        id: radar_t1_distance
-        name: "Radar Target 1 Distance"
-    target_2:
-      x:
-        id: radar_t2_x
-        name: "Radar Target 2 X"
-      y:
-        id: radar_t2_y
-        name: "Radar Target 2 Y"
-      speed:
-        id: radar_t2_speed
-        name: "Radar Target 2 Speed"
-      distance:
-        id: radar_t2_distance
-        name: "Radar Target 2 Distance"
-    target_3:
-      x:
-        id: radar_t3_x
-        name: "Radar Target 3 X"
-      y:
-        id: radar_t3_y
-        name: "Radar Target 3 Y"
-      speed:
-        id: radar_t3_speed
-        name: "Radar Target 3 Speed"
-      distance:
-        id: radar_t3_distance
-        name: "Radar Target 3 Distance"
 
 interval:
   - interval: 250ms
@@ -177,6 +168,68 @@ interval:
               t["distance_mm"] = id(radar_t3_distance).state;
               t["speed_mm_s"] = id(radar_t3_speed).state;
             }
+
+globals:
+  - id: radar_target_count
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: radar_still_count
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: radar_moving_count
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: radar_t1_x
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t1_y
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t1_speed
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t1_distance
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t2_x
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t2_y
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t2_speed
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t2_distance
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t3_x
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t3_y
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t3_speed
+    type: float
+    restore_value: no
+    initial_value: "NAN"
+  - id: radar_t3_distance
+    type: float
+    restore_value: no
+    initial_value: "NAN"
 
 color:
   - id: color_black
