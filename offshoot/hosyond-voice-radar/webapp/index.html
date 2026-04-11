@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hosyond Voice Radar 3D</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <h1>Hosyond Radar Console</h1>
+        <p class="muted">Live room mapping and scanned-item workspace.</p>
+        <div id="status">Status: <span id="statusBadge">connecting...</span></div>
+
+        <h2>Metrics</h2>
+        <div class="panel">
+          <div>Targets: <strong id="targetCount">0</strong></div>
+          <div>Tracked Objects: <strong id="objectCount">0</strong></div>
+          <div>Items: <strong id="itemCount">0</strong></div>
+        </div>
+
+        <h2>Room Configuration</h2>
+        <div class="panel">
+          <div class="row">
+            <div>
+              <label for="roomWidth">Width (mm)</label>
+              <input id="roomWidth" type="number" value="5000" />
+            </div>
+            <div>
+              <label for="roomHeight">Height (mm)</label>
+              <input id="roomHeight" type="number" value="5000" />
+            </div>
+          </div>
+          <label for="roomGrid">Grid (mm)</label>
+          <input id="roomGrid" type="number" value="250" />
+          <button id="saveRoom" class="primary">Save Room</button>
+        </div>
+
+        <h2>Scanned Items</h2>
+        <div class="panel">
+          <label for="itemId">Item ID</label>
+          <input id="itemId" value="chair-1" />
+          <label for="itemName">Name</label>
+          <input id="itemName" value="Chair" />
+          <label for="itemCategory">Category</label>
+          <input id="itemCategory" value="furniture" />
+
+          <div class="row">
+            <div>
+              <label for="itemX">X (mm)</label>
+              <input id="itemX" type="number" value="1200" />
+            </div>
+            <div>
+              <label for="itemY">Y (mm)</label>
+              <input id="itemY" type="number" value="900" />
+            </div>
+          </div>
+          <label for="itemZ">Z (mm)</label>
+          <input id="itemZ" type="number" value="0" />
+          <button id="upsertItem">Add/Update Item</button>
+          <ul id="itemsList"></ul>
+        </div>
+
+        <h2>Event Feed</h2>
+        <div class="panel">
+          <pre id="feed">Waiting for data...</pre>
+        </div>
+      </aside>
+
+      <canvas id="scene"></canvas>
+    </div>
+
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
