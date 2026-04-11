@@ -1,0 +1,3 @@
+asyncio-mqtt
+fastapi
+uvicorn
