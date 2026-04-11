@@ -1,0 +1,481 @@
+substitutions:
+  name: "hosyond-s3-voice-radar"
+  friendly_name: "Hosyond Voice Radar"
+
+  wifi_ssid: "WiFive43-24g"
+  wifi_password: "happy1029"
+
+  mqtt_broker: "192.168.1.10"
+  mqtt_port: "1883"
+  mqtt_username: "radar"
+  mqtt_password: "radar_password"
+  mqtt_topic_prefix: "hosyond/voice-radar"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2024.6.0
+  project:
+    name: offshoot.hosyond_voice_radar
+    version: "0.1.0"
+  on_boot:
+    priority: 600
+    then:
+      - light.turn_on: disp_light
+      - text_sensor.template.publish:
+          id: ui_page_text
+          state: "voice"
+      - text_sensor.template.publish:
+          id: va_state_text
+          state: "idle"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+  flash_size: 16MB
+
+logger:
+  level: DEBUG
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  power_save_mode: light
+
+web_server:
+  version: 3
+  port: 80
+
+mqtt:
+  broker: ${mqtt_broker}
+  port: ${mqtt_port}
+  username: ${mqtt_username}
+  password: ${mqtt_password}
+  topic_prefix: ${mqtt_topic_prefix}
+  log_topic:
+    topic: ${mqtt_topic_prefix}/logs
+    level: INFO
+  on_connect:
+    - mqtt.publish:
+        topic: ${mqtt_topic_prefix}/status
+        payload: "online"
+  on_disconnect:
+    - mqtt.publish:
+        topic: ${mqtt_topic_prefix}/status
+        payload: "offline"
+
+i2c:
+  sda: 16
+  scl: 15
+  scan: true
+  id: bus_a
+  frequency: 400kHz
+
+spi:
+  clk_pin: 12
+  mosi_pin: 11
+  miso_pin: 13
+
+uart:
+  id: ld2450_uart
+  tx_pin: 47
+  rx_pin: 21
+  baud_rate: 256000
+
+ld2450:
+  - id: radar
+    uart_id: ld2450_uart
+
+sensor:
+  - platform: ld2450
+    ld2450_id: radar
+    target_count:
+      id: radar_target_count
+      name: "Radar Target Count"
+    still_target_count:
+      id: radar_still_count
+      name: "Radar Still Target Count"
+    moving_target_count:
+      id: radar_moving_count
+      name: "Radar Moving Target Count"
+    target_1:
+      x:
+        id: radar_t1_x
+        name: "Radar Target 1 X"
+      y:
+        id: radar_t1_y
+        name: "Radar Target 1 Y"
+      speed:
+        id: radar_t1_speed
+        name: "Radar Target 1 Speed"
+      distance:
+        id: radar_t1_distance
+        name: "Radar Target 1 Distance"
+    target_2:
+      x:
+        id: radar_t2_x
+        name: "Radar Target 2 X"
+      y:
+        id: radar_t2_y
+        name: "Radar Target 2 Y"
+      speed:
+        id: radar_t2_speed
+        name: "Radar Target 2 Speed"
+      distance:
+        id: radar_t2_distance
+        name: "Radar Target 2 Distance"
+    target_3:
+      x:
+        id: radar_t3_x
+        name: "Radar Target 3 X"
+      y:
+        id: radar_t3_y
+        name: "Radar Target 3 Y"
+      speed:
+        id: radar_t3_speed
+        name: "Radar Target 3 Speed"
+      distance:
+        id: radar_t3_distance
+        name: "Radar Target 3 Distance"
+
+interval:
+  - interval: 250ms
+    then:
+      - mqtt.publish_json:
+          topic: ${mqtt_topic_prefix}/radar/raw
+          payload: |-
+            root["ts"] = millis();
+            root["target_count"] = id(radar_target_count).state;
+            JsonArray targets = root["targets"].to<JsonArray>();
+            if (!isnan(id(radar_t1_distance).state)) {
+              JsonObject t = targets.add<JsonObject>();
+              t["id"] = 1;
+              t["x_mm"] = id(radar_t1_x).state;
+              t["y_mm"] = id(radar_t1_y).state;
+              t["distance_mm"] = id(radar_t1_distance).state;
+              t["speed_mm_s"] = id(radar_t1_speed).state;
+            }
+            if (!isnan(id(radar_t2_distance).state)) {
+              JsonObject t = targets.add<JsonObject>();
+              t["id"] = 2;
+              t["x_mm"] = id(radar_t2_x).state;
+              t["y_mm"] = id(radar_t2_y).state;
+              t["distance_mm"] = id(radar_t2_distance).state;
+              t["speed_mm_s"] = id(radar_t2_speed).state;
+            }
+            if (!isnan(id(radar_t3_distance).state)) {
+              JsonObject t = targets.add<JsonObject>();
+              t["id"] = 3;
+              t["x_mm"] = id(radar_t3_x).state;
+              t["y_mm"] = id(radar_t3_y).state;
+              t["distance_mm"] = id(radar_t3_distance).state;
+              t["speed_mm_s"] = id(radar_t3_speed).state;
+            }
+
+color:
+  - id: color_black
+    red: 0%
+    green: 0%
+    blue: 0%
+  - id: color_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: pip_green
+    red: 10%
+    green: 96%
+    blue: 10%
+  - id: pip_dim
+    red: 5%
+    green: 30%
+    blue: 5%
+  - id: pip_amber
+    red: 100%
+    green: 71%
+    blue: 26%
+  - id: pip_red
+    red: 100%
+    green: 20%
+    blue: 20%
+  - id: pip_blue
+    red: 20%
+    green: 60%
+    blue: 100%
+
+font:
+  - file: "gfonts://VT323"
+    id: font_vsmall
+    size: 20
+  - file: "gfonts://VT323"
+    id: font_medium
+    size: 28
+  - file: "gfonts://VT323"
+    id: font_header
+    size: 32
+  - file: "gfonts://VT323"
+    id: font_large
+    size: 48
+
+display:
+  - platform: ili9xxx
+    model: ILI9341
+    id: my_display
+    cs_pin: 10
+    dc_pin: 46
+    invert_colors: false
+    update_interval: 100ms
+    transform:
+      swap_xy: true
+      mirror_x: false
+    dimensions:
+      width: 320
+      height: 240
+    pages:
+      - id: page_voice
+        lambda: |-
+          Color green = id(pip_green);
+          Color dim = id(pip_dim);
+          Color amber = id(pip_amber);
+          Color white = id(color_white);
+          std::string state = id(va_state_text).state;
+
+          for (int y = 0; y < 240; y += 4) {
+            it.line(0, y, 320, y, dim);
+          }
+          it.rectangle(5, 5, 310, 30, green);
+          it.print(160, 8, id(font_header), green, TextAlign::TOP_CENTER, "VOICE");
+
+          int cx = 160;
+          int cy = 120;
+          int eye_spacing = 60;
+          int eye_radius = (state == "thinking") ? 6 : 20;
+          int mouth_open = (state == "speaking") ? (millis() / 120) % 18 : 0;
+          Color face_color = (state == "listening") ? amber : green;
+
+          it.filled_circle(cx - eye_spacing, cy - 20, eye_radius, face_color);
+          it.filled_circle(cx + eye_spacing, cy - 20, eye_radius, face_color);
+          if (state == "listening") {
+            it.circle(cx, cy + 40, 12, face_color);
+          } else {
+            int m_w = 44;
+            int m_h = 2 + mouth_open;
+            it.filled_rectangle(cx - (m_w / 2), cy + 40 - (m_h / 2), m_w, m_h, face_color);
+          }
+
+          it.printf(160, 205, id(font_medium), white, TextAlign::CENTER, "%s", state.c_str());
+
+      - id: page_radar
+        lambda: |-
+          Color dim = id(pip_dim);
+          Color green = id(pip_green);
+          Color amber = id(pip_amber);
+          Color red = id(pip_red);
+          Color white = id(color_white);
+
+          const int cx = 160;
+          const int cy = 130;
+          const int max_r = 95;
+          it.print(160, 8, id(font_header), green, TextAlign::TOP_CENTER, "RADAR");
+
+          for (int r = 20; r <= max_r; r += 20) {
+            it.circle(cx, cy, r, dim);
+          }
+          it.line(cx - max_r, cy, cx + max_r, cy, dim);
+          it.line(cx, cy - max_r, cx, cy + max_r, dim);
+
+          auto draw_target = [&](float x_mm, float y_mm, int target_id) {
+            if (isnan(x_mm) || isnan(y_mm)) {
+              return;
+            }
+            const float scale = 0.02f;  // 50mm -> 1px
+            int x = cx + int(x_mm * scale);
+            int y = cy - int(y_mm * scale);
+            if (x < (cx - max_r) || x > (cx + max_r) || y < (cy - max_r) || y > (cy + max_r)) {
+              return;
+            }
+            Color c = target_id == 1 ? green : (target_id == 2 ? amber : red);
+            it.filled_circle(x, y, 5, c);
+          };
+
+          draw_target(id(radar_t1_x).state, id(radar_t1_y).state, 1);
+          draw_target(id(radar_t2_x).state, id(radar_t2_y).state, 2);
+          draw_target(id(radar_t3_x).state, id(radar_t3_y).state, 3);
+
+          it.printf(160, 218, id(font_vsmall), white, TextAlign::CENTER, "Targets: %.0f", id(radar_target_count).state);
+
+touchscreen:
+  - platform: ft63x6
+    id: joy_touch
+    interrupt_pin: 17
+    reset_pin: 18
+    on_touch:
+      - lambda: |-
+          bool on_voice_page = id(my_display).get_active_page() == id(page_voice);
+          bool on_radar_page = id(my_display).get_active_page() == id(page_radar);
+          if (touch.x > 280 && touch.y > 200) {
+            if (on_radar_page) {
+              id(my_display).show_page(id(page_voice));
+              id(ui_page_text).publish_state("voice");
+            } else {
+              id(my_display).show_page(id(page_radar));
+              id(ui_page_text).publish_state("radar");
+            }
+            id(my_display).update();
+          } else if (on_voice_page) {
+            id(trigger_voice).execute();
+          }
+
+i2s_audio:
+  id: i2s_bus
+  i2s_lrclk_pin: 7
+  i2s_bclk_pin: 5
+  i2s_mclk_pin: 4
+
+audio_dac:
+  - platform: es8311
+    id: codec
+    i2c_id: bus_a
+    use_microphone: true
+
+microphone:
+  - platform: i2s_audio
+    id: board_microphone
+    i2s_audio_id: i2s_bus
+    i2s_din_pin: 8
+    adc_type: external
+    pdm: false
+
+speaker:
+  - platform: i2s_audio
+    id: board_speaker
+    i2s_audio_id: i2s_bus
+    dac_type: external
+    i2s_dout_pin: 6
+    channel: stereo
+    audio_dac: codec
+
+script:
+  - id: trigger_voice
+    then:
+      - if:
+          condition:
+            voice_assistant.is_running:
+              id: va
+          then:
+            - voice_assistant.stop:
+                id: va
+          else:
+            - voice_assistant.start:
+                id: va
+
+voice_assistant:
+  id: va
+  microphone: board_microphone
+  speaker: board_speaker
+  on_listening:
+    - light.turn_on:
+        id: led_status
+        brightness: 100%
+        red: 100%
+        green: 60%
+        blue: 0%
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "listening"
+  on_stt_vad_end:
+    - light.turn_on:
+        id: led_status
+        brightness: 100%
+        red: 20%
+        green: 60%
+        blue: 100%
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "thinking"
+  on_tts_start:
+    - light.turn_on:
+        id: led_status
+        brightness: 100%
+        red: 0%
+        green: 100%
+        blue: 0%
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "speaking"
+  on_end:
+    - light.turn_off: led_status
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "idle"
+  on_error:
+    - light.turn_on:
+        id: led_status
+        brightness: 100%
+        red: 100%
+        green: 0%
+        blue: 0%
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "error"
+    - delay: 1s
+    - text_sensor.template.publish:
+        id: va_state_text
+        state: "idle"
+    - light.turn_off: led_status
+
+binary_sensor:
+  - platform: status
+    id: node_status
+    name: "Node Status"
+
+text_sensor:
+  - platform: template
+    id: va_state_text
+    name: "VA State"
+    internal: true
+    on_value:
+      then:
+        - component.update: my_display
+        - mqtt.publish:
+            topic: ${mqtt_topic_prefix}/voice/state
+            payload: !lambda 'return x;'
+  - platform: template
+    id: ui_page_text
+    name: "UI Page"
+    internal: true
+    on_value:
+      then:
+        - mqtt.publish:
+            topic: ${mqtt_topic_prefix}/ui/page
+            payload: !lambda 'return x;'
+  - platform: wifi_info
+    ip_address:
+      id: ip_address
+      name: "IP Address"
+
+light:
+  - platform: esp32_rmt_led_strip
+    rgb_order: GRB
+    chipset: ws2812
+    pin: 48
+    num_leds: 1
+    name: "Status LED"
+    id: led_status
+
+  - platform: monochromatic
+    id: disp_light
+    name: "Display Backlight"
+    output: gpio_45_backlight_pwm
+    restore_mode: ALWAYS_ON
+
+output:
+  - platform: ledc
+    pin: 45
+    id: gpio_45_backlight_pwm
+    frequency: 1000 Hz
