@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEXGUARD — Elite Tactical Performance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #cc1a1a;
+      --red-bright: #ff2828;
+      --red-dark: #8a0f0f;
+      --gunmetal: #141b26;
+      --gunmetal-light: #1e2838;
+      --bg: #080b0f;
+      --text: #dce3ef;
+      --text-dim: #5e6e82;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ───────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 3rem;
+      background: rgba(8, 11, 15, 0.82);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(204, 26, 26, 0.12);
+    }
+
+    .nav-brand {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 1.15rem;
+      letter-spacing: 0.22em;
+      color: #fff;
+    }
+    .nav-brand span { color: var(--red-bright); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--red-bright); }
+
+    .nav-cta {
+      padding: 0.5rem 1.6rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover {
+      background: var(--red-bright);
+      box-shadow: 0 0 20px rgba(255, 40, 40, 0.4);
+    }
+
+    /* ── HERO ──────────────────────────────────────────────────── */
+    #hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(204, 26, 26, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(204, 26, 26, 0.045) 1px, transparent 1px);
+      background-size: 65px 65px;
+      mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, black 30%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #hero-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 1;
+    }
+
+    .hero-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 55% 60% at 50% 42%, transparent 35%, var(--bg) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .hero-content {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 10vh;
+      z-index: 3;
+      text-align: center;
+      padding: 0 1.5rem;
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.68rem;
+      font-weight: 400;
+      letter-spacing: 0.4em;
+      color: var(--red-bright);
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
+    }
+
+    .hero-headline {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.07;
+      letter-spacing: 0.04em;
+      margin-bottom: 1.1rem;
+      text-transform: uppercase;
+    }
+    .hero-headline em {
+      font-style: normal;
+      color: var(--red-bright);
+      text-shadow: 0 0 50px rgba(255, 40, 40, 0.55);
+    }
+
+    .hero-sub {
+      font-size: 0.98rem;
+      font-weight: 300;
+      color: var(--text-dim);
+      max-width: 420px;
+      margin: 0 auto 2.2rem;
+      line-height: 1.75;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      pointer-events: all;
+    }
+
+    .btn-primary {
+      padding: 0.85rem 2.4rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      cursor: pointer;
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--red-bright);
+      box-shadow: 0 0 32px rgba(255, 40, 40, 0.5);
+    }
+
+    .btn-ghost {
+      padding: 0.85rem 2.4rem;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(204, 26, 26, 0.38);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      cursor: pointer;
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .btn-ghost:hover {
+      border-color: var(--red-bright);
+      color: var(--red-bright);
+      box-shadow: inset 0 0 20px rgba(204, 26, 26, 0.08);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.45rem;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .scroll-hint span {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.35em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 38px;
+      background: linear-gradient(to bottom, var(--red-bright), transparent);
+      animation: scrollPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.25; transform: scaleY(0.7); }
+      55% { opacity: 1; transform: scaleY(1); }
+    }
+
+    /* ── SHARED SECTION STYLES ─────────────────────────────────── */
+    section { padding: 7rem 2rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.42em;
+      color: var(--red-bright);
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
+    }
+
+    .section-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .section-sub {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(204, 26, 26, 0.28), transparent);
+    }
+
+    /* ── FEATURES ──────────────────────────────────────────────── */
+    #features { background: var(--bg); }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .features-header .section-sub { max-width: 520px; margin: 0 auto; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.4rem;
+    }
+
+    .feature-card {
+      position: relative;
+      padding: 2.4rem;
+      background: rgba(255, 255, 255, 0.022);
+      border: 1px solid rgba(255, 255, 255, 0.055);
+      border-left: 2px solid var(--red);
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 25% 25%, rgba(204,26,26,0.07), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover { border-color: rgba(204, 26, 26, 0.55); transform: translateY(-3px); }
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      margin-bottom: 1.4rem;
+      color: var(--red-bright);
+    }
+
+    .feature-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+
+    .feature-desc {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.72;
+    }
+
+    /* ── STATS ─────────────────────────────────────────────────── */
+    #stats {
+      background: var(--gunmetal);
+      border-top: 1px solid rgba(204, 26, 26, 0.13);
+      border-bottom: 1px solid rgba(204, 26, 26, 0.13);
+      padding: 5rem 2rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 2.5rem;
+      text-align: center;
+    }
+
+    .stat-item { position: relative; }
+    .stat-item::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 20%; bottom: 20%;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .stat-item:last-child::after { display: none; }
+
+    .stat-value {
+      display: block;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      color: var(--red-bright);
+      line-height: 1;
+      margin-bottom: 0.55rem;
+      text-shadow: 0 0 35px rgba(255, 40, 40, 0.38);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── CTA ───────────────────────────────────────────────────── */
+    #cta {
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .cta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.38rem 1.2rem;
+      border: 1px solid rgba(204, 26, 26, 0.28);
+      background: rgba(204, 26, 26, 0.07);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.32em;
+      color: var(--red-bright);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .cta-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--red-bright);
+      animation: blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--red-bright); }
+      50% { opacity: 0.2; box-shadow: none; }
+    }
+
+    .cta-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+    .cta-title em { font-style: normal; color: var(--red-bright); }
+
+    .cta-sub {
+      color: var(--text-dim);
+      font-size: 0.96rem;
+      line-height: 1.75;
+      max-width: 460px;
+      margin: 0 auto 2.8rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── FOOTER ────────────────────────────────────────────────── */
+    footer {
+      padding: 2.5rem 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── RESPONSIVE ────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      section { padding: 5rem 1.5rem; }
+      .hero-content { bottom: 8vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-brand">APEX<span>GUARD</span></div>
+  <ul class="nav-links">
+    <li><a href="#features">Capabilities</a></li>
+    <li><a href="#stats">Performance</a></li>
+    <li><a href="#cta">Deploy</a></li>
+  </ul>
+  <button class="nav-cta">Get Access</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-vignette"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">// Elite Tactical System v2.6</p>
+    <h1 class="hero-headline">Forged in<br><em>Fire &amp; Steel</em></h1>
+    <p class="hero-sub">Next-generation performance engineered for those who demand nothing less than absolute precision.</p>
+    <div class="hero-buttons">
+      <button class="btn-primary">Deploy Now</button>
+      <button class="btn-ghost">Learn More</button>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="features-header">
+      <p class="section-label">// Core Capabilities</p>
+      <h2 class="section-title">Engineered for Dominance</h2>
+      <p class="section-sub">Every system, every component, every surface — built to outperform under the most demanding conditions.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <h3 class="feature-title">Dimensional Depth</h3>
+        <p class="feature-desc">Multi-layer extrusion architecture with precision-beveled edges. Every surface engineered to catch and refract light with tactical intent.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        <h3 class="feature-title">Metallic Finishes</h3>
+        <p class="feature-desc">Brushed red chrome on the eagle crest. Dark gunmetal on the shield base. PBR materials with real-time environment map reflections.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <h3 class="feature-title">Dynamic Response</h3>
+        <p class="feature-desc">Real-time mouse tracking, bloom post-processing, ambient particle field. The logo breathes, reacts, and pulses with kinetic energy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-value" data-target="500">0</span>
+        <span class="stat-label">K+ Active Deployments</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" data-target="99.9" data-decimal="1">0</span>
+        <span class="stat-label">% System Uptime</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" data-target="8">0</span>
+        <span class="stat-label">ms Response Latency</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" data-target="150">0</span>
+        <span class="stat-label">+ Integrations</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-badge"><div class="cta-dot"></div>System Online</div>
+    <h2 class="cta-title">Ready to <em>Elevate</em><br>Your Game?</h2>
+    <p class="cta-sub">Join the elite. Deploy the system that top-tier operators trust when performance is non-negotiable.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">Deploy Now</button>
+      <button class="btn-ghost">View Documentation</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 APEXGUARD — All systems nominal.</p>
+</footer>
+
+<!-- THREE.JS SCENE -->
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer }   from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }       from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass }  from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RoomEnvironment }  from 'three/addons/environments/RoomEnvironment.js';
+
+// ── Renderer ────────────────────────────────────────────────────────────────
+const canvas   = document.getElementById('hero-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.5;
+renderer.outputColorSpace    = THREE.SRGBColorSpace;
+
+// ── Scene & Camera ───────────────────────────────────────────────────────────
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+camera.position.set(0, 0, 8);
+
+// ── Environment (PBR reflections) ───────────────────────────────────────────
+const pmrem     = new THREE.PMREMGenerator(renderer);
+const envTex    = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environment = envTex;
+pmrem.dispose();
+
+// ── Lights ───────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x1a1a2e, 0.7));
+
+const keyLight = new THREE.DirectionalLight(0xffe8d0, 4.0);
+keyLight.position.set(-3, 5, 5);
+scene.add(keyLight);
+
+const rimLight = new THREE.PointLight(0xff2020, 10, 22);
+rimLight.position.set(3.5, -2, -4);
+scene.add(rimLight);
+
+const fillLight = new THREE.PointLight(0x3355cc, 3, 18);
+fillLight.position.set(-4, 1, 3);
+scene.add(fillLight);
+
+const topLight = new THREE.DirectionalLight(0xffffff, 2);
+topLight.position.set(0, 6, 3);
+scene.add(topLight);
+
+// ── Materials ────────────────────────────────────────────────────────────────
+const matRedChrome = new THREE.MeshStandardMaterial({
+  color: 0xbb1212,
+  metalness: 0.93,
+  roughness: 0.11,
+  envMapIntensity: 2.2,
+  emissive: 0x3a0000,
+  emissiveIntensity: 0.45,
+});
+
+const matGunmetal = new THREE.MeshStandardMaterial({
+  color: 0x161e2c,
+  metalness: 0.9,
+  roughness: 0.3,
+  envMapIntensity: 1.7,
+  emissive: 0x040608,
+  emissiveIntensity: 0.12,
+});
+
+const matGunmetalMid = new THREE.MeshStandardMaterial({
+  color: 0x1e2a3c,
+  metalness: 0.84,
+  roughness: 0.38,
+  envMapIntensity: 1.5,
+  emissive: 0x060810,
+  emissiveIntensity: 0.1,
+});
+
+const matRedGlow = new THREE.MeshStandardMaterial({
+  color: 0xff2020,
+  metalness: 0.65,
+  roughness: 0.08,
+  envMapIntensity: 1.4,
+  emissive: 0xff1010,
+  emissiveIntensity: 0.9,
+});
+
+// ── Shape Builders ───────────────────────────────────────────────────────────
+function extrudeOpts(depth, bevel = 0.03) {
+  return { depth, bevelEnabled: true, bevelThickness: bevel * 1.6, bevelSize: bevel, bevelSegments: 4 };
+}
+
+// Shield — classic esports pentagonal shape
+function shieldShape() {
+  const s = new THREE.Shape();
+  s.moveTo(0, -1.28);
+  s.lineTo(-0.94, -0.18);
+  s.bezierCurveTo(-1.04, 0.28, -0.98, 0.88, -0.72, 1.08);
+  s.lineTo(0.72, 1.08);
+  s.bezierCurveTo(0.98, 0.88, 1.04, 0.28, 0.94, -0.18);
+  s.lineTo(0, -1.28);
+  s.closePath();
+  return s;
+}
+
+// Eagle body silhouette — broad dark layer
+function eagleBodyShape() {
+  const s = new THREE.Shape();
+  s.moveTo(-0.36, -0.92);
+  s.bezierCurveTo(-0.56, -0.5,  -0.62, 0.0,  -0.55, 0.28);
+  s.bezierCurveTo(-0.5,  0.5,   -0.3,  0.62, -0.05, 0.58);
+  s.bezierCurveTo( 0.18, 0.54,   0.52, 0.4,   0.70, 0.22);
+  s.bezierCurveTo( 0.84, 0.08,   0.82,-0.06,  0.74,-0.01);
+  s.bezierCurveTo( 0.63, 0.04,   0.44, 0.18,  0.27, 0.25);
+  s.bezierCurveTo( 0.09, 0.33,  -0.07, 0.35, -0.12, 0.35);
+  s.bezierCurveTo(-0.2,  0.47,  -0.22, 0.62, -0.14, 0.72);
+  s.bezierCurveTo(-0.06, 0.82,   0.01, 0.93, -0.02, 1.03);
+  s.bezierCurveTo(-0.06, 1.1,   -0.14, 1.07, -0.2,  0.97);
+  s.bezierCurveTo(-0.24, 0.87,  -0.29, 0.72, -0.31, 0.58);
+  s.bezierCurveTo(-0.38, 0.42,  -0.44, 0.2,  -0.42, 0.0);
+  s.bezierCurveTo(-0.4, -0.22,  -0.42,-0.56, -0.36,-0.92);
+  s.closePath();
+  return s;
+}
+
+// Eagle head — red chrome detail layer (tighter, front-facing)
+function eagleHeadShape() {
+  const s = new THREE.Shape();
+  s.moveTo(-0.28, -0.02);
+  s.bezierCurveTo(-0.44, 0.1,  -0.5,  0.3,  -0.44, 0.44);
+  s.bezierCurveTo(-0.38, 0.56, -0.2,  0.63, -0.04, 0.58);
+  s.bezierCurveTo( 0.17, 0.53,  0.5,  0.38,  0.68, 0.21);
+  s.bezierCurveTo( 0.82, 0.07,  0.8, -0.06,  0.73,-0.01);
+  s.bezierCurveTo( 0.62, 0.05,  0.43, 0.18,  0.25, 0.26);
+  s.bezierCurveTo( 0.08, 0.33, -0.07, 0.35, -0.12, 0.35);
+  s.bezierCurveTo(-0.2,  0.47, -0.2,  0.61, -0.13, 0.71);
+  s.bezierCurveTo(-0.05, 0.81,  0.01, 0.91, -0.01, 1.01);
+  s.bezierCurveTo(-0.05, 1.09, -0.14, 1.06, -0.19, 0.96);
+  s.bezierCurveTo(-0.23, 0.86, -0.27, 0.71, -0.29, 0.57);
+  s.bezierCurveTo(-0.36, 0.4,  -0.4,  0.2,  -0.37, 0.07);
+  s.bezierCurveTo(-0.35,-0.02, -0.28,-0.02, -0.28,-0.02);
+  s.closePath();
+  return s;
+}
+
+// Top accent bar — red bar across shield top
+function topBarShape() {
+  const s = new THREE.Shape();
+  const w = 1.22, h = 0.21, r = 0.04;
+  s.moveTo(-w + r, 0);
+  s.lineTo(w - r, 0);
+  s.quadraticCurveTo(w, 0, w, r);
+  s.lineTo(w, h - r);
+  s.quadraticCurveTo(w, h, w - r, h);
+  s.lineTo(-w + r, h);
+  s.quadraticCurveTo(-w, h, -w, h - r);
+  s.lineTo(-w, r);
+  s.quadraticCurveTo(-w, 0, -w + r, 0);
+  s.closePath();
+  return s;
+}
+
+// ── Build Logo Group ─────────────────────────────────────────────────────────
+const logoGroup = new THREE.Group();
+scene.add(logoGroup);
+
+// Layer 0 — shield rim (slightly oversized, dark edge glow)
+const rimMat = new THREE.MeshStandardMaterial({
+  color: 0x0e1520, metalness: 0.96, roughness: 0.18,
+  emissive: 0x08101e, emissiveIntensity: 0.2,
+});
+const shieldRim = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(shieldShape(), { depth: 0.05, bevelEnabled: false }),
+  rimMat
+);
+shieldRim.scale.setScalar(1.02);
+shieldRim.position.z = -0.04;
+logoGroup.add(shieldRim);
+
+// Layer 1 — shield base (gunmetal)
+const shieldMesh = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(shieldShape(), extrudeOpts(0.3, 0.042)),
+  matGunmetal
+);
+shieldMesh.position.z = 0;
+logoGroup.add(shieldMesh);
+
+// Layer 2 — eagle body (dark gunmetal, mid-layer)
+const eagleBody = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(eagleBodyShape(), extrudeOpts(0.38, 0.022)),
+  matGunmetalMid
+);
+eagleBody.position.z = 0.28;
+logoGroup.add(eagleBody);
+
+// Layer 3 — eagle head (red chrome, front layer)
+const eagleHead = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(eagleHeadShape(), extrudeOpts(0.24, 0.018)),
+  matRedChrome
+);
+eagleHead.position.z = 0.58;
+logoGroup.add(eagleHead);
+
+// Layer 4 — top accent bar (red glow)
+const topBar = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(topBarShape(), extrudeOpts(0.2, 0.024)),
+  matRedGlow
+);
+topBar.position.set(0, 0.87, 0.75);
+logoGroup.add(topBar);
+
+// Eagle eye — small emissive sphere for detail
+const eyeMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.058, 12, 12),
+  new THREE.MeshStandardMaterial({
+    color: 0x080808, metalness: 0.4, roughness: 0.25,
+    emissive: 0xff9900, emissiveIntensity: 0.6,
+  })
+);
+eyeMesh.position.set(-0.12, 0.53, 0.84);
+logoGroup.add(eyeMesh);
+
+// Center & scale
+logoGroup.position.set(0, 0.35, 0);
+logoGroup.scale.setScalar(1.48);
+
+// ── Particles ────────────────────────────────────────────────────────────────
+const N = 260;
+const pPos = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+  const phi   = Math.acos(2 * Math.random() - 1);
+  const theta = Math.random() * Math.PI * 2;
+  const r     = 3.6 + Math.random() * 1.8;
+  pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+  pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+  pPos[i*3+2] = r * Math.cos(phi);
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  color: 0xff3333, size: 0.038, transparent: true, opacity: 0.5, sizeAttenuation: true,
+}));
+scene.add(particles);
+
+// ── Post-Processing ──────────────────────────────────────────────────────────
+let composer;
+function buildComposer(w, h) {
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.72, 0.42, 0.70));
+}
+
+// ── Resize ───────────────────────────────────────────────────────────────────
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  buildComposer(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ── Mouse / Gyro Tracking ────────────────────────────────────────────────────
+let mouseOffsetX = 0, mouseOffsetY = 0;
+window.addEventListener('mousemove', e => {
+  mouseOffsetX = (e.clientX / window.innerWidth  - 0.5) * 0.55;
+  mouseOffsetY = (e.clientY / window.innerHeight - 0.5) * 0.32;
+});
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', e => {
+    if (e.gamma != null) mouseOffsetX = (e.gamma / 45) * 0.28;
+    if (e.beta  != null) mouseOffsetY = ((e.beta - 45) / 45) * 0.18;
+  });
+}
+
+// ── Animate ──────────────────────────────────────────────────────────────────
+let currentX = 0, currentY = 0, autoAngle = 0;
+
+function animate(t) {
+  requestAnimationFrame(animate);
+
+  autoAngle += 0.005;
+
+  const targetY = autoAngle + mouseOffsetX;
+  const targetX = -mouseOffsetY * 0.6;
+
+  currentY += (targetY - currentY) * 0.04;
+  currentX += (targetX - currentX) * 0.04;
+
+  logoGroup.rotation.y = currentY;
+  logoGroup.rotation.x = currentX;
+
+  // Breathing emissive pulse
+  const pulse = Math.sin(t * 0.0011) * 0.22 + 0.45;
+  matRedChrome.emissiveIntensity = pulse;
+  matRedGlow.emissiveIntensity   = 0.75 + Math.sin(t * 0.0017) * 0.28;
+
+  // Rim light throb
+  rimLight.intensity = 8 + Math.sin(t * 0.0009) * 3;
+
+  // Slow particle drift
+  particles.rotation.y += 0.00075;
+  particles.rotation.x += 0.00028;
+
+  composer.render();
+}
+animate(0);
+
+// ── Stats Counter ─────────────────────────────────────────────────────────────
+const statEls = document.querySelectorAll('.stat-value');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(({ isIntersecting, target }) => {
+    if (!isIntersecting) return;
+    const end      = parseFloat(target.dataset.target);
+    const decimals = parseInt(target.dataset.decimal || '0');
+    const t0       = performance.now();
+    const dur      = 1700;
+    const tick = now => {
+      const p = Math.min((now - t0) / dur, 1);
+      const v = end * (1 - Math.pow(1 - p, 3));
+      target.textContent = v.toFixed(decimals);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    io.unobserve(target);
+  });
+}, { threshold: 0.4 });
+statEls.forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
